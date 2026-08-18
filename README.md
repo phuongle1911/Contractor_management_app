@@ -1,5 +1,17 @@
 # Contractor Management App
 
+## Main features
+- user log in, log out
+- admin user can assign/ register user account
+- User choose which project they are working on, location, budget,  any requirements for specific projects
+- based on those information, AI recommend suitable contractor using information in the app and information in google (google review,...)
+- sending a quote request to potential contractors 
+- when user decides to select a contractor, app send them a link for them to fill out required information and documents
+- user have ability to set up template of information request form
+- use those information to save info of the registered contractor, with main services they provide. 
+- user give feedback for contractors in the app when they finished working with contractor
+
+
 A monorepo containing a Next.js frontend, Spring Boot backend, and PostgreSQL database.
 
 ## Project structure
