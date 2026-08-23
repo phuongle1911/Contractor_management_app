@@ -3,17 +3,33 @@ services:
     image: postgres:17-alpine
     environment:
       POSTGRES_DB: contractor_management
-      POSTGRES_USER: contractor_app
-      POSTGRES_PASSWORD: contractor_dev_password
+      POSTGRES_USER: ${DB_USERNAME:-contractor_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-contractor_dev_password}
     ports:
       - "5433:5432"
     volumes:
       - contractor_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U contractor_app -d contractor_management"]
-      interval: 5s
+      # interval: 5s
       timeout: 5s
-      retries: 10
+      # retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: DOCKERFILE
+    container_name: contractor_backend
+    ports:
+      - "8080:8080"
+    environment:
+      POSTGRES_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/contractor_management}
+      POSTGRES_USER: ${DB_USERNAME:-contractor_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-contractor_dev_password}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   contractor_postgres_data:

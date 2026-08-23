@@ -40,25 +40,27 @@ Maven does not need to be installed globally because the backend includes the Ma
 cp frontend/.env.example frontend/.env.local
 ```
 
-### 2. Start PostgreSQL
+### 2. Build Backend Image
 
+Do this at the first time before you run the app 
+
+```bash
+docker compose build backend
+```
+
+
+### 3. Start the backend
+
+Start the backend docker container
 ```bash
 docker compose up -d
 ```
+
 
 Check that it is healthy:
 
 ```bash
 docker compose ps
-```
-
-### 3. Start the backend
-
-In a separate terminal:
-
-```bash
-cd backend
-./mvnw spring-boot:run
 ```
 
 The API runs at `http://localhost:8080`.
