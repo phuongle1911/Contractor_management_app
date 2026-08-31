@@ -117,7 +117,7 @@ Both commands must complete without errors.
 Start PostgreSQL:
 
 ```bash
-docker compose up -d
+docker compose up postgres -d
 ```
 
 Start the backend in a separate terminal:

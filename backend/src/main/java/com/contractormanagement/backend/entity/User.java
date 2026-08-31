@@ -32,29 +32,29 @@ public class User {
 
     @NotBlank
     @Email
-    @Size(max = 320)
-    @Column(name = "email", nullable = false, unique = true, length = 320)
+    @Size(max = 255)
+    @Column(name = "email", unique = true)
     private String email;
 
     @NotBlank
-    @Size(max = 150)
-    @Column(name = "name", nullable = false, length = 150)
+    @Size(max = 255)
+    @Column(name = "name")
     private String name;
 
     @NotBlank
-    @Size(max = 255)
-    @Column(name = "password_hash", nullable = false, length = 255)
-    private String passwordHash;
+    @Column(name = "password_hash")
+    private String password_hash;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 32)
+    @Column(name = "role")
     private UserRole role;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 16)
+    @Column(name = "status")
     private UserStatus status;
+
 
 
 }
