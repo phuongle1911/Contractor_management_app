@@ -21,7 +21,7 @@ import lombok.Setter;
 @Table(name = "users")
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 public class User {
 
     @Id

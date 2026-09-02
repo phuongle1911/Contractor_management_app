@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.contractormanagement.backend.dto.UserCreateRequest;
 import com.contractormanagement.backend.dto.UserUpdateRequest;
 import com.contractormanagement.backend.entity.User;
 import com.contractormanagement.backend.mapper.UserMapper;
@@ -27,11 +28,14 @@ import jakarta.validation.Valid;
 public class UserController {
 
   private final UserRepository userRepository;
+  private final UserMapper userMapper;
 
-  public UserController(UserRepository userRepository) {
+  public UserController(UserRepository userRepository, UserMapper userMapper) {
     this.userRepository = userRepository;
+    this.userMapper = userMapper;
   }
 
+  // get all users
   @ResponseBody
   @GetMapping
   public ResponseEntity<List<User>> getAllUsers() {
@@ -43,7 +47,7 @@ public class UserController {
     }
 
   }
-
+  // get user by id
   @ResponseBody
   @GetMapping("/{id}")
   public User getUserById(@PathVariable long id) {
@@ -53,19 +57,20 @@ public class UserController {
     return targetUser;
   }
 
-
+  // create new user
   @PostMapping("/create")
-  public ResponseEntity<String> createUser(@RequestBody User newUser) {
+  public ResponseEntity<String> createUser(@Valid @RequestBody UserCreateRequest newUserRequest) {
     try {
+      User newUser = userMapper.createEntity(newUserRequest);
       userRepository.save(newUser);
-      return ResponseEntity.ok("user created successfully!");
+      return ResponseEntity.ok("user created successfully! " + newUser);
     } catch (Exception e) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"fail to save new user! Error:" + e);
     }
 
   }
 
-
+  // update user
   @PatchMapping("/update/{id}")
   public ResponseEntity<String> updateUser(@PathVariable long id,@Valid @RequestBody UserUpdateRequest updates) {
 
@@ -73,15 +78,15 @@ public class UserController {
       User targetUser = userRepository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "unable to find user with id:" + id));
 
-      UserMapper userMap = new UserMapper();
-      User updatedUser = userMap.updateEntity(updates, targetUser);
+      User updatedUser = userMapper.updateEntity(updates, targetUser);
       userRepository.save(updatedUser);
-      return ResponseEntity.ok("user updated successfully! \n"+updatedUser);
+      return ResponseEntity.ok("user updated successfully! " + updatedUser);
     } catch (Exception e) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"fail to get update user with id " + id);
     }
   }
 
+  // delete user by id
   @DeleteMapping("/delete/{id}")
   public ResponseEntity<String> deleteUserById(@PathVariable long id) {
     try {
@@ -95,6 +100,10 @@ public class UserController {
     }
   }
 
+  // @PostMapping("/login")
+  // public ResponseEntity<String> login() {
+
+  // }
 }
 
   
