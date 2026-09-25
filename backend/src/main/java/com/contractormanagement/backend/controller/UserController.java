@@ -2,8 +2,14 @@ package com.contractormanagement.backend.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,10 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.contractormanagement.backend.dto.UserCreateRequest;
+import com.contractormanagement.backend.dto.UserResponse;
 import com.contractormanagement.backend.dto.UserUpdateRequest;
 import com.contractormanagement.backend.entity.User;
 import com.contractormanagement.backend.mapper.UserMapper;
 import com.contractormanagement.backend.repository.UserRepository;
+import com.contractormanagement.backend.security.JwtService;
+import com.contractormanagement.backend.dto.UserLoginRequest;
 
 import jakarta.validation.Valid;
 
@@ -30,6 +39,16 @@ public class UserController {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
 
+  @Autowired 
+  AuthenticationManager authenticationManager;
+
+  @Autowired 
+  PasswordEncoder encoder;
+
+  @Autowired
+  JwtService jwtService;
+
+
   public UserController(UserRepository userRepository, UserMapper userMapper) {
     this.userRepository = userRepository;
     this.userMapper = userMapper;
@@ -38,12 +57,13 @@ public class UserController {
   // get all users
   @ResponseBody
   @GetMapping
-  public ResponseEntity<List<User>> getAllUsers() {
+  public ResponseEntity<List<UserResponse>> getAllUsers() {
     try {
-      userRepository.findAll();
-      return ResponseEntity.ok(userRepository.findAll()); 
+      userRepository.findAllUsers();
+      return ResponseEntity.ok(userRepository.findAllUsers()); 
     } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"fail to get all users!");
+      System.out.println(e);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
   }
@@ -61,11 +81,14 @@ public class UserController {
   @PostMapping("/create")
   public ResponseEntity<String> createUser(@Valid @RequestBody UserCreateRequest newUserRequest) {
     try {
+        if (userRepository.existsByEmail(newUserRequest.getEmail())) {
+          return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already registered!");
+        }
       User newUser = userMapper.createEntity(newUserRequest);
       userRepository.save(newUser);
       return ResponseEntity.ok("user created successfully! " + newUser);
     } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"fail to save new user! Error:" + e);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"fail to create new user! Error:" + e);
     }
 
   }
@@ -82,7 +105,7 @@ public class UserController {
       userRepository.save(updatedUser);
       return ResponseEntity.ok("user updated successfully! " + updatedUser);
     } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"fail to get update user with id " + id);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"fail to update user! " + e);
     }
   }
 
@@ -94,16 +117,27 @@ public class UserController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "unable to find user with id:" + id));
 
       userRepository.delete(targetUser);
-      return ResponseEntity.ok("user id " + id + " is deleted successfully! \\n");
+      return ResponseEntity.ok("user id " + id + " is deleted successfully! \n");
     } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"fail to delete user with id " + id);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"fail to delete user! " + e);
     }
   }
 
-  // @PostMapping("/login")
-  // public ResponseEntity<String> login() {
+  @PostMapping("/login")
+  public ResponseEntity<String> login(@RequestBody UserLoginRequest user) {
+    try {
+      Authentication authentication = authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
+      );
+      UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+      jwtService.generateJwt(userDetails.getUsername());
+      return ResponseEntity.ok("user login successfully");
+    } catch (Exception e) {
+      e.printStackTrace(); 
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"login failed! "+ e);
+    }
+  }
 
-  // }
 }
 
   

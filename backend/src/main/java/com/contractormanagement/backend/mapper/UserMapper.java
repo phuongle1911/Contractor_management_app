@@ -16,16 +16,7 @@ public class UserMapper {
   }
 
   public User createEntity(UserCreateRequest request) {
-    User newUser = new User();
-
-    newUser.setEmail(request.getEmail());
-    newUser.setName(request.getName());
-
-    String password_hash = passwordEncoder.encode(request.getPassword());
-    newUser.setPassword_hash(password_hash);
-
-    newUser.setRole(request.getRole());
-    newUser.setStatus(request.getStatus());
+    User newUser = new User(null,request.getEmail(),request.getName(),passwordEncoder.encode(request.getPassword()),request.getRole(),request.getStatus());
 
     return newUser;
 

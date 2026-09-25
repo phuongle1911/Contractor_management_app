@@ -1,0 +1,146 @@
+package com.contractormanagement.backend.controller;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import com.contractormanagement.backend.entity.User;
+import com.contractormanagement.backend.repository.UserRepository;
+
+@SpringBootTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class ControllerEndpointsTest {
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private static final String EMAIL = "controller.endpoint.user@example.com";
+    private static final String PASSWORD = "StrongPassword123";
+    private static final String NAME = "Controller Test User";
+
+    @BeforeEach
+    void setUp() {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        userRepository.deleteAll();
+    }
+
+    @Test
+    @Order(1)
+    void healthEndpoint_shouldReturnOk() throws Exception {
+        mockMvc.perform(get("/api/health"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("ok"));
+    }
+
+    @Test
+    @Order(2)
+    void userEndpoints_shouldWorkEndToEnd() throws Exception {
+        String createPayload = String.format(
+            "{\"name\":\"%s\",\"email\":\"%s\",\"password\":\"%s\",\"role\":\"ADMIN\",\"status\":\"ACTIVE\"}",
+            NAME, EMAIL, PASSWORD
+        );
+
+        mockMvc.perform(post("/api/users/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createPayload))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("user created successfully")));
+
+        User createdUser = userRepository.findByEmail(EMAIL);
+        assertNotNull(createdUser);
+        Long userId = createdUser.getId();
+
+        mockMvc.perform(get("/api/users"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].email").value(EMAIL));
+
+        mockMvc.perform(get("/api/users/{id}", userId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.email").value(EMAIL));
+
+        mockMvc.perform(patch("/api/users/update/{id}", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Updated Controller User\",\"status\":\"INACTIVE\"}"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("user updated successfully")));
+
+        mockMvc.perform(post("/api/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"email\":\"%s\",\"password\":\"%s\"}", EMAIL, PASSWORD)))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("user login successfully")));
+
+        mockMvc.perform(delete("/api/users/delete/{id}", userId))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("is deleted successfully")));
+    }
+
+    @Test
+    @Order(3)
+    void createUser_withDuplicateEmail_shouldReturnConflict() throws Exception {
+        String createPayload = String.format(
+            "{\"name\":\"%s\",\"email\":\"%s\",\"password\":\"%s\",\"role\":\"ADMIN\",\"status\":\"ACTIVE\"}",
+            NAME, EMAIL, PASSWORD
+        );
+
+        mockMvc.perform(post("/api/users/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createPayload))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/users/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createPayload))
+            .andExpect(status().isConflict())
+            .andExpect(content().string(containsString("Email is already registered!")));
+    }
+
+    @Test
+    @Order(4)
+    void getUserById_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
+        mockMvc.perform(get("/api/users/{id}", 999999L))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(5)
+    void login_withBadCredentials_shouldReturnUnauthorized() throws Exception {
+        String createPayload = String.format(
+            "{\"name\":\"%s\",\"email\":\"%s\",\"password\":\"%s\",\"role\":\"ADMIN\",\"status\":\"ACTIVE\"}",
+            NAME, EMAIL, PASSWORD
+        );
+
+        mockMvc.perform(post("/api/users/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createPayload))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"email\":\"%s\",\"password_hash\":\"wrongPassword\"}", EMAIL)))
+            .andExpect(status().isUnauthorized());
+    }
+}
