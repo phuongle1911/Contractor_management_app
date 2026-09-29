@@ -6,11 +6,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
 import com.contractormanagement.backend.entity.User;
-
 import com.contractormanagement.backend.repository.UserRepository;
-
-import io.jsonwebtoken.lang.Collections;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService{
@@ -19,13 +17,10 @@ public class CustomUserDetailsService implements UserDetailsService{
 
   @Override
   public UserDetails loadUserByUsername(String email) {
-    try {
-      User targetUser = userRepository.findByEmail(email);
-      return new org.springframework.security.core.userdetails.User(targetUser.getEmail(),targetUser.getPassword_hash(),Collections.emptyList());
-    } catch (Exception e) {
+    User targetUser = userRepository.findByEmail(email);
+    if(targetUser == null) {
       throw new UsernameNotFoundException("unable to find user with email: " + email);
     }
-    
-    
+    return new UserPrincipal(targetUser);
   };
 }

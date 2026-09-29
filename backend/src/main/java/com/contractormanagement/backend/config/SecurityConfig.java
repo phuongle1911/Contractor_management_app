@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,6 +19,7 @@ import com.contractormanagement.backend.security.JwtAuthFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
   @Autowired 
   CustomUserDetailsService userDetailsService;
@@ -40,9 +42,10 @@ public class SecurityConfig {
       .csrf(csrf -> csrf.disable())
       .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests((authorize) -> authorize
-				// .requestMatchers("/api/users/**").hasRole("ADMIN")
-        .requestMatchers("/api/**").permitAll()
-        // .anyRequest().authenticated()
+        .requestMatchers("/api/health").permitAll()
+        .requestMatchers("/api/users/login").permitAll()
+        .requestMatchers("/api/users/**").authenticated()
+        .anyRequest().authenticated()
 			)
       .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
 

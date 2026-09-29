@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,13 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.contractormanagement.backend.dto.UserCreateRequest;
+import com.contractormanagement.backend.dto.UserLoginRequest;
 import com.contractormanagement.backend.dto.UserResponse;
 import com.contractormanagement.backend.dto.UserUpdateRequest;
 import com.contractormanagement.backend.entity.User;
 import com.contractormanagement.backend.mapper.UserMapper;
 import com.contractormanagement.backend.repository.UserRepository;
 import com.contractormanagement.backend.security.JwtService;
-import com.contractormanagement.backend.dto.UserLoginRequest;
 
 import jakarta.validation.Valid;
 
@@ -57,6 +58,7 @@ public class UserController {
   // get all users
   @ResponseBody
   @GetMapping
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<List<UserResponse>> getAllUsers() {
     try {
       userRepository.findAllUsers();
@@ -70,6 +72,7 @@ public class UserController {
   // get user by id
   @ResponseBody
   @GetMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
   public User getUserById(@PathVariable long id) {
 
     User targetUser = userRepository.findById(id)
@@ -79,6 +82,7 @@ public class UserController {
 
   // create new user
   @PostMapping("/create")
+  @PreAuthorize ("hasRole('ADMIN')")
   public ResponseEntity<String> createUser(@Valid @RequestBody UserCreateRequest newUserRequest) {
     try {
         if (userRepository.existsByEmail(newUserRequest.getEmail())) {
@@ -95,6 +99,7 @@ public class UserController {
 
   // update user
   @PatchMapping("/update/{id}")
+  @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
   public ResponseEntity<String> updateUser(@PathVariable long id,@Valid @RequestBody UserUpdateRequest updates) {
 
     try {
@@ -111,6 +116,7 @@ public class UserController {
 
   // delete user by id
   @DeleteMapping("/delete/{id}")
+  @PreAuthorize ("hasRole('ADMIN')")
   public ResponseEntity<String> deleteUserById(@PathVariable long id) {
     try {
       User targetUser = userRepository.findById(id)
@@ -124,16 +130,15 @@ public class UserController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<String> login(@RequestBody UserLoginRequest user) {
+  public String login(@RequestBody UserLoginRequest user) {
     try {
       Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
       );
       UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-      jwtService.generateJwt(userDetails.getUsername());
-      return ResponseEntity.ok("user login successfully");
+      return jwtService.generateJwt(userDetails.getUsername());
+      // return ResponseEntity.ok("user login successfully");
     } catch (Exception e) {
-      e.printStackTrace(); 
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"login failed! "+ e);
     }
   }
