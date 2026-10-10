@@ -1,5 +1,7 @@
 package com.contractormanagement.backend.entity;
 
+import java.util.ArrayList;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +15,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +24,8 @@ import lombok.Setter;
 @Table(name = "users")
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
@@ -32,40 +36,29 @@ public class User {
 
     @NotBlank
     @Email
-    @Size(max = 320)
-    @Column(name = "email", nullable = false, unique = true, length = 320)
+    @Size(max = 255)
+    @Column(name = "email", unique = true)
     private String email;
 
     @NotBlank
-    @Size(max = 150)
-    @Column(name = "name", nullable = false, length = 150)
+    @Size(max = 255)
+    @Column(name = "name")
     private String name;
 
     @NotBlank
-    @Size(max = 255)
-    @Column(name = "password_hash", nullable = false, length = 255)
-    private String passwordHash;
+    @Column(name = "password_hash")
+    private String password_hash;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 32)
-    private UserRole role;
+    @Column(name = "roles")
+    private ArrayList<UserRole> roles;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 16)
+    @Column(name = "status")
     private UserStatus status;
 
-    public User(
-            String email,
-            String name,
-            String passwordHash,
-            UserRole role,
-            UserStatus status) {
-        this.email = email;
-        this.name = name;
-        this.passwordHash = passwordHash;
-        this.role = role;
-        this.status = status;
-    }
+
+
 }
