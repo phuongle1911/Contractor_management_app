@@ -16,7 +16,7 @@ public class UserMapper {
   }
 
   public User createEntity(UserCreateRequest request) {
-    User newUser = new User(null,request.getEmail(),request.getName(),passwordEncoder.encode(request.getPassword()),request.getRole(),request.getStatus());
+    User newUser = new User(null,request.getEmail(),request.getName(),passwordEncoder.encode(request.getPassword()),request.getRoles(),request.getStatus());
 
     return newUser;
 
@@ -35,8 +35,8 @@ public class UserMapper {
       userToUpdate.setPassword_hash(password_hash);
     }
 
-    if (request.getRole() != null) {
-      userToUpdate.setRole(request.getRole());
+    if (request.getRoles() != null) {
+      userToUpdate.setRoles(request.getRoles());
     }
 
     if (request.getStatus() != null) {

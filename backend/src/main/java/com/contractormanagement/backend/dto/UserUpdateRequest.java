@@ -1,5 +1,7 @@
 package com.contractormanagement.backend.dto;
 
+import java.util.ArrayList;
+
 import com.contractormanagement.backend.entity.UserRole;
 import com.contractormanagement.backend.entity.UserStatus;
 
@@ -25,7 +27,7 @@ public class UserUpdateRequest {
   private String password;
 
   @Enumerated(EnumType.STRING)
-  private UserRole role;
+  private ArrayList<UserRole> roles;
 
   @Enumerated(EnumType.STRING)
   private UserStatus status;

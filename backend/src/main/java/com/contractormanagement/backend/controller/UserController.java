@@ -61,7 +61,6 @@ public class UserController {
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<List<UserResponse>> getAllUsers() {
     try {
-      userRepository.findAllUsers();
       return ResponseEntity.ok(userRepository.findAllUsers()); 
     } catch (Exception e) {
       System.out.println(e);
@@ -81,6 +80,7 @@ public class UserController {
   }
 
   // create new user
+  @ResponseBody
   @PostMapping("/create")
   @PreAuthorize ("hasRole('ADMIN')")
   public ResponseEntity<String> createUser(@Valid @RequestBody UserCreateRequest newUserRequest) {
@@ -98,6 +98,7 @@ public class UserController {
   }
 
   // update user
+  @ResponseBody
   @PatchMapping("/update/{id}")
   @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
   public ResponseEntity<String> updateUser(@PathVariable long id,@Valid @RequestBody UserUpdateRequest updates) {
@@ -115,6 +116,7 @@ public class UserController {
   }
 
   // delete user by id
+  @ResponseBody
   @DeleteMapping("/delete/{id}")
   @PreAuthorize ("hasRole('ADMIN')")
   public ResponseEntity<String> deleteUserById(@PathVariable long id) {

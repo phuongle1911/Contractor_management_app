@@ -1,5 +1,7 @@
 package com.contractormanagement.backend.dto;
 
+import java.util.ArrayList;
+
 import com.contractormanagement.backend.entity.UserRole;
 import com.contractormanagement.backend.entity.UserStatus;
 
@@ -29,7 +31,7 @@ public class UserCreateRequest {
 
   @NotNull
   @Enumerated(EnumType.STRING)
-  private UserRole role;
+  private ArrayList<UserRole> roles;
 
   @NotNull
   @Enumerated(EnumType.STRING)

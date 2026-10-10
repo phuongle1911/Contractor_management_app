@@ -1,7 +1,7 @@
 package com.contractormanagement.backend.security;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -32,7 +32,9 @@ public class UserPrincipal implements UserDetails {
 
   @Override 
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+    return user.getRoles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+            .collect(Collectors.toList());
+    // List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
   }
 
   @Override 
